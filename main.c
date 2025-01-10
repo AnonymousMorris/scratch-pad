@@ -23,6 +23,8 @@ int main() {
     RenderTexture texture = LoadRenderTexture(screenWidth, screenHeight);
     bool eraser_on = false;
 
+    HideCursor();
+
     while (!WindowShouldClose()) {
         // update
         if (IsWindowResized()) {
@@ -69,9 +71,13 @@ int main() {
         if (eraser_on) {
             DrawCircle(cur_position.x, cur_position.y, eraserWidth / 2, WHITE);
         }
+        else {
+            DrawCircle(cur_position.x, cur_position.y, lineWidth / 2, fgColor);
+        }
         EndDrawing();
     }
     UnloadTexture(texture.texture);
+    ShowCursor();
     CloseWindow();
     return 0;
 }
