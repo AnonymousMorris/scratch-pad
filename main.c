@@ -5,46 +5,64 @@ typedef struct {
     int y;
 } pos;
 
-void draw(pos from, pos to, Color color) {
-    BeginDrawing();
-    ClearBackground(LIGHTGRAY);
-    DrawLine(from.x, from.y, to.x, to.y, color);
-    EndDrawing();
-}
-
 int main() {
-    const int screenWidth = 800;
-    const int screenHeight = 450;
+    int screenWidth = 800;
+    int screenHeight = 450;
 
-    const Color penColor = BLACK;
+    const Color fgColor = BLACK;
     const Color bgColor = LIGHTGRAY;
 
-    const float lineWidth = 3.0f;
+    const float lineWidth = 4.0f;
+    const float eraserWidth = 24.0f;
 
+    SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(screenWidth, screenHeight, "Scratch Pad");
     SetTargetFPS(60);
 
     pos last_position = {GetMouseX(), GetMouseY()};
     RenderTexture texture = LoadRenderTexture(screenWidth, screenHeight);
+    bool eraser_on = false;
 
     while (!WindowShouldClose()) {
         // update
+        if (IsWindowResized()) {
+            screenWidth = GetScreenWidth();
+            screenHeight = GetScreenHeight();
+            // texture = texture
+            RenderTexture newTexture = LoadRenderTexture(screenWidth, screenHeight);
+            BeginTextureMode(newTexture);
+            DrawTexture(texture.texture, 0, 0, WHITE);
+            EndTextureMode();
+            texture = newTexture;
+        }
+        
         pos cur_position = {GetMouseX(), GetMouseY()};
-        if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) {
+        eraser_on = IsKeyDown(KEY_SPACE);
 
+        if (IsKeyDown(KEY_N)) {
+            texture = LoadRenderTexture(screenWidth, screenHeight);
+        }
+
+        // draw to texture
+        if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) {
             BeginTextureMode(texture);
+            Color draw_color = eraser_on? bgColor : fgColor;
+            float draw_width = eraser_on? eraserWidth : lineWidth;
             DrawLineEx((Vector2){last_position.x, screenHeight - last_position.y}, 
                        (Vector2) {cur_position.x, screenHeight - cur_position.y}, 
-                       lineWidth,
-                       penColor);
+                       draw_width,
+                       draw_color);
             EndTextureMode();
-            // draw(last_position, cur_position, penColor);
         }
         last_position = cur_position;
 
+        // draw to screen
         BeginDrawing();
         ClearBackground(bgColor);
-        DrawTexture(texture.texture, 0, 0, DARKGRAY);
+        DrawTexture(texture.texture, 0, 0, WHITE);
+        if (eraser_on) {
+            DrawCircle(cur_position.x, cur_position.y, eraserWidth / 2, WHITE);
+        }
         EndDrawing();
     }
     CloseWindow();
