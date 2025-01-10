@@ -26,20 +26,25 @@ int main() {
     while (!WindowShouldClose()) {
         // update
         if (IsWindowResized()) {
-            screenWidth = GetScreenWidth();
-            screenHeight = GetScreenHeight();
+            int newScreenWidth = GetScreenWidth();
+            int newScreenHeight = GetScreenHeight();
             // texture = texture
-            RenderTexture newTexture = LoadRenderTexture(screenWidth, screenHeight);
+            RenderTexture newTexture = LoadRenderTexture(newScreenWidth, newScreenHeight);
             BeginTextureMode(newTexture);
-            DrawTexture(texture.texture, 0, 0, WHITE);
+            // DrawTextureEx(texture.texture, (Vector2){screenWidth, screenHeight}, -180, 1, WHITE);
+            Rectangle source = (Rectangle) {0, 0, screenWidth, -screenHeight};
+            DrawTextureRec(texture.texture, source, (Vector2) {0, 0}, WHITE);
             EndTextureMode();
+            screenWidth = newScreenWidth;
+            screenHeight = newScreenHeight;
+            // UnloadTexture(texture.texture);
             texture = newTexture;
         }
         
         pos cur_position = {GetMouseX(), GetMouseY()};
-        eraser_on = IsKeyDown(KEY_SPACE);
+        eraser_on = IsKeyDown(KEY_SPACE) || IsKeyDown(KEY_E);
 
-        if (IsKeyDown(KEY_N)) {
+        if (IsKeyDown(KEY_N) || IsKeyDown(KEY_C)) {
             texture = LoadRenderTexture(screenWidth, screenHeight);
         }
 
@@ -48,8 +53,8 @@ int main() {
             BeginTextureMode(texture);
             Color draw_color = eraser_on? bgColor : fgColor;
             float draw_width = eraser_on? eraserWidth : lineWidth;
-            DrawLineEx((Vector2){last_position.x, screenHeight - last_position.y}, 
-                       (Vector2) {cur_position.x, screenHeight - cur_position.y}, 
+            DrawLineEx((Vector2) {last_position.x, last_position.y}, 
+                       (Vector2) {cur_position.x, cur_position.y}, 
                        draw_width,
                        draw_color);
             EndTextureMode();
@@ -59,12 +64,14 @@ int main() {
         // draw to screen
         BeginDrawing();
         ClearBackground(bgColor);
-        DrawTexture(texture.texture, 0, 0, WHITE);
+        Rectangle source = (Rectangle) {0, 0, screenWidth, -screenHeight};
+        DrawTextureRec(texture.texture, source, (Vector2) {0, 0}, WHITE);
         if (eraser_on) {
             DrawCircle(cur_position.x, cur_position.y, eraserWidth / 2, WHITE);
         }
         EndDrawing();
     }
+    UnloadTexture(texture.texture);
     CloseWindow();
     return 0;
 }
